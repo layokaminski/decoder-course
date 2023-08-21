@@ -37,11 +37,11 @@ public class CourseModel extends RepresentationModel<CourseModel> implements Ser
     private String imageUrl;
 
     @Column(nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyy HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss-3:00")
     private LocalDateTime creationDate;
 
     @Column(nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyy HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss-3:00")
     private LocalDateTime lastUpdateDate;
 
     @Column(nullable = false)

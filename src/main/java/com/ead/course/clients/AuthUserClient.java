@@ -1,10 +1,13 @@
 package com.ead.course.clients;
 
+import com.ead.course.DTOs.CourseUserDTO;
 import com.ead.course.DTOs.ResponsePageDTO;
 import com.ead.course.DTOs.UserDTO;
+import com.ead.course.models.CourseModel;
 import com.ead.course.services.UtilsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +22,7 @@ import java.util.UUID;
 
 @Log4j2
 @Component
-public class CourseClient {
+public class AuthUserClient {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -27,10 +30,13 @@ public class CourseClient {
     @Autowired
     private UtilsService utilsService;
 
+    @Value("${ead.api.url.authuser}")
+    String REQUEST_URL_AUTHUSER;
+
     public Page<UserDTO> getAllUsersByCourse(UUID courseId, Pageable pageable){
         List<UserDTO> searchResult = null;
         ResponseEntity<ResponsePageDTO<UserDTO>> result = null;
-        String url = utilsService.createUrlGetAllUsersByCourse(courseId, pageable);
+        String url = REQUEST_URL_AUTHUSER + utilsService.createUrlGetAllUsersByCourse(courseId, pageable);
 
         log.debug("Request URL: {} ", url);
         log.info("Request URL: {} ", url);
@@ -49,5 +55,25 @@ public class CourseClient {
         log.info("Ending request /users courseId {} ", courseId);
 
         return result.getBody();
+    }
+
+    public ResponseEntity<UserDTO> getUserById(UUID userId){
+        String url = REQUEST_URL_AUTHUSER + "/users/" + userId;
+
+        log.debug("Request URL: {} ", url);
+        log.info("Request URL: {} ", url);
+
+        return restTemplate.exchange(url, HttpMethod.GET, null, UserDTO.class);
+    }
+
+    public void postSubscriptionUserInCourse(UUID courseId, UUID userId) {
+        String url = REQUEST_URL_AUTHUSER + "/users/" + userId + "/courses/subscription";
+
+        var courseUserDTO = new CourseUserDTO();
+
+        courseUserDTO.setCourseId(courseId);
+        courseUserDTO.setUserId(userId);
+
+        restTemplate.postForObject(url, courseUserDTO, String.class);
     }
 }

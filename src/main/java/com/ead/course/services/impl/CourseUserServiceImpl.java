@@ -22,7 +22,8 @@ public class CourseUserServiceImpl implements CourseUserService {
 
     @Override
     public boolean existsByCourseAndUserId(CourseModel courseModel, UUID userId) {
-        return courseUserRepository.existsByCourseAndUserId(courseModel, userId);
+        var test = courseUserRepository.existsByCourseAndUserId(courseModel, userId);
+        return false;
     }
 
     @Override
@@ -41,5 +42,16 @@ public class CourseUserServiceImpl implements CourseUserService {
         );
 
         return savedCourseUser;
+    }
+
+    @Override
+    public boolean existsByUserId(UUID userId) {
+        return courseUserRepository.existsByUserId(userId);
+    }
+
+    @Transactional
+    @Override
+    public void deleteCourseUserByUser(UUID userId) {
+        courseUserRepository.deleteAllByUserId(userId);
     }
 }

@@ -1,7 +1,7 @@
 package com.ead.course.specifications;
 
 import com.ead.course.models.CourseModel;
-import com.ead.course.models.CourseUserModel;
+import com.ead.course.models.UserModel;
 import com.ead.course.models.LessonModel;
 import com.ead.course.models.ModuleModel;
 import net.kaczmarzyk.spring.data.jpa.domain.EqualIgnoreCase;
@@ -35,6 +35,14 @@ public class SpecificationTemplate {
     })
     public interface LessonSpec extends Specification<LessonModel> {}
 
+    @And({
+            @Spec(path = "userType", spec = EqualIgnoreCase.class),
+            @Spec(path = "userStatus", spec = EqualIgnoreCase.class),
+            @Spec(path = "email", spec = LikeIgnoreCase.class),
+            @Spec(path = "fullName", spec = LikeIgnoreCase.class)
+    })
+    public interface UserSpec extends Specification<UserModel> {}
+
     public static Specification<ModuleModel> moduleCourseId(final UUID courseId) {
         return (root, query, cb) -> {
             query.distinct(true);
@@ -55,11 +63,23 @@ public class SpecificationTemplate {
         };
     }
 
+    public static Specification<UserModel> userCourseId(final UUID courseId) {
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Root<UserModel> user = root;
+            Root<CourseModel> course = query.from(CourseModel.class);
+            Expression<Collection<UserModel>> courseUsers = course.get("users");
+            return cb.and(cb.equal(course.get("courseId"), courseId), cb.isMember(user, courseUsers));
+        };
+    }
+
     public static Specification<CourseModel> courseUserId(final UUID userId) {
         return (root, query, cb) -> {
             query.distinct(true);
-            Join<CourseModel, CourseUserModel> courseProd = root.join("coursesUsers");
-            return cb.equal(courseProd.get("userId"), userId);
+            Root<CourseModel> course = root;
+            Root<UserModel> user = query.from(UserModel.class);
+            Expression<Collection<CourseModel>> usersCourse = user.get("courses");
+            return cb.and(cb.equal(user.get("userId"), userId), cb.isMember(course, usersCourse));
         };
     }
 }

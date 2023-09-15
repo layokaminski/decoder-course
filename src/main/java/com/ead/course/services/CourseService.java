@@ -16,4 +16,8 @@ public interface CourseService {
     Optional<CourseModel> findById(UUID courseId);
 
     Page<CourseModel> findAll(Specification<CourseModel> spec, Pageable pageable);
+
+    boolean existsByCourseAndUser(UUID courseId, UUID userId);
+
+    void sabeSubscriptionUserInCourse(UUID courseId, UUID userId);
 }

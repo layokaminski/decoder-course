@@ -75,8 +75,8 @@ public class CourseUserController {
                 () -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found")
         );
 
-        courseService.sabeSubscriptionUserInCourse(
-                courseModelOptional.get().getCourseId(), userModelOptional.get().getUserId()
+        courseService.sabeSubscriptionUserInCourseAndSendNotification(
+                courseModelOptional.get(), userModelOptional.get()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Subscription created successfully.");

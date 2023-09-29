@@ -1,12 +1,16 @@
 package com.ead.course.services.impl;
 
+import com.ead.course.DTOs.NotificationCommandDTO;
 import com.ead.course.models.CourseModel;
 import com.ead.course.models.LessonModel;
 import com.ead.course.models.ModuleModel;
+import com.ead.course.models.UserModel;
+import com.ead.course.publishers.NotificationCommandPublisher;
 import com.ead.course.repositories.CourseRepository;
 import com.ead.course.repositories.LessonRepository;
 import com.ead.course.repositories.ModuleRepository;
 import com.ead.course.services.CourseService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Log4j2
 @Service
 public class CourseServiceImpl implements CourseService {
 
@@ -29,6 +34,9 @@ public class CourseServiceImpl implements CourseService {
 
     @Autowired
     private LessonRepository lessonRepository;
+
+    @Autowired
+    private NotificationCommandPublisher notificationCommandPublisher;
 
     @Transactional
     @Override
@@ -48,6 +56,7 @@ public class CourseServiceImpl implements CourseService {
             moduleRepository.deleteAll(moduleModelList);
         }
 
+        courseRepository.deleteCourseUserByCourse(courseModel.getCourseId());
         courseRepository.delete(courseModel);
     }
 
@@ -75,5 +84,24 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public void sabeSubscriptionUserInCourse(UUID courseId, UUID userId) {
         courseRepository.saveCourseUser(courseId, userId);
+    }
+
+    @Transactional
+    @Override
+    public void sabeSubscriptionUserInCourseAndSendNotification(
+            CourseModel courseModel, UserModel userModel
+    ) {
+        courseRepository.saveCourseUser(courseModel.getCourseId(), userModel.getUserId());
+
+        try {
+            var notificationCommandDTO = new NotificationCommandDTO();
+            notificationCommandDTO.setTitle("Bem-Vindo(a) ao Curso: " + courseModel.getName());
+            notificationCommandDTO.setMessage(userModel.getFullName() + " a sua inscrição foi realizada com sucesso!");
+            notificationCommandDTO.setUserId(userModel.getUserId());
+
+            notificationCommandPublisher.publishNotificationCommand(notificationCommandDTO);
+        } catch (Exception exception) {
+            log.warn("Error sending notification!");
+        }
     }
 }

@@ -1,11 +1,13 @@
 package com.ead.course.validations;
 
 import com.ead.course.DTOs.CourseDTO;
+import com.ead.course.configs.security.AuthenticationCurrentUserService;
 import com.ead.course.enums.UserType;
 import com.ead.course.models.UserModel;
 import com.ead.course.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -22,6 +24,9 @@ public class CourseValidator  implements Validator {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AuthenticationCurrentUserService authenticationCurrentUserService;
 
     @Override
     public boolean supports(Class<?> aClass) {
@@ -40,15 +45,21 @@ public class CourseValidator  implements Validator {
     }
 
     private void validateUserInstructor(UUID userInstructorId, Errors errors) {
-        Optional<UserModel> userModelOptional = userService.findById(userInstructorId);
+        UUID currentUserId = authenticationCurrentUserService.getCurrentUser().getUserId();
 
-        userModelOptional.ifPresentOrElse(
-                userModel -> {
-                    if (userModel.getUserType().equals(UserType.STUDENT.toString())) {
-                        errors.rejectValue("userInstructor", "UserInstructorError", "User must be INSTRUCTOR or ADMIN");
-                    }
-                },
-                () -> errors.rejectValue("userInstructor", "UserInstructorError", "Instructor not found.")
-        );
+        if (currentUserId.equals(userInstructorId)) {
+            Optional<UserModel> userModelOptional = userService.findById(userInstructorId);
+
+            userModelOptional.ifPresentOrElse(
+                    userModel -> {
+                        if (userModel.getUserType().equals(UserType.STUDENT.toString())) {
+                            errors.rejectValue("userInstructor", "UserInstructorError", "User must be INSTRUCTOR or ADMIN");
+                        }
+                    },
+                    () -> errors.rejectValue("userInstructor", "UserInstructorError", "Instructor not found.")
+            );
+        } else {
+            throw new AccessDeniedException("Forbidden");
+        }
     }
 }
